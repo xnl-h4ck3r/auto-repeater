@@ -1,14 +1,23 @@
-package burp;
+package burp.Replacements;
 
+import burp.BurpExtender;
+import burp.IExtensionHelpers;
+import burp.IHttpRequestResponse;
+import burp.IParameter;
+import burp.IRequestInfo;
+import burp.Utils.Utils;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-class Replacement {
+public class Replacement {
   public static final String[] REPLACEMENT_TYPE_OPTIONS = {
+      "Request String",
+
       "Request Header",
       "Request Body",
       "Request Param Name",
@@ -16,7 +25,6 @@ class Replacement {
       "Request Cookie Name",
       "Request Cookie Value",
       "Request First Line",
-      "Request String",
 
       "Add Header",
 
@@ -24,6 +32,8 @@ class Replacement {
       "Remove Parameter By Value",
       "Remove Cookie By Name",
       "Remove Cookie By Value",
+      "Remove Header By Name",
+      "Remove Header By Value",
 
       "Match Param Name, Replace Value",
       "Match Cookie Name, Replace Value",
@@ -301,7 +311,6 @@ class Replacement {
         wasChanged = true;
       }
     }
-
     // This helps deal with binary data getting messed up from the string conversion and causing a new request.
     if (wasChanged) {
       return helpers.buildHttpMessage(headers, body);
@@ -309,79 +318,6 @@ class Replacement {
       return request;
     }
   }
-
-  //private byte[] updateRequestParamName(byte[] request) {
-  //  IExtensionHelpers helpers = BurpExtender.getHelpers();
-  //  IRequestInfo analyzedRequest = helpers.analyzeRequest(request);
-  //  List<IParameter> parameters = analyzedRequest.getParameters();
-  //  List<IParameter> originalParameters = analyzedRequest.getParameters();
-  //  boolean requestIsMultipartForm = Utils.isRequestMultipartForm(request);
-  //  boolean wasChanged = false;
-
-  //  BurpExtender.getCallbacks().printOutput("Request is multipart form: ");
-  //  BurpExtender.getCallbacks().printOutput(Boolean.toString(Utils.isRequestMultipartForm(request)));
-
-  //  if (requestIsMultipartForm) {
-  //    BurpExtender.getCallbacks().printOutput("Boundary: ");
-  //    BurpExtender.getCallbacks().printOutput(Utils.getMultipartBoundary(request));
-  //    Utils.getMultipartParameters(request);
-  //  }
-
-  //  for (ListIterator<IParameter> iterator = parameters.listIterator(); iterator.hasNext(); ) {
-  //    int i = iterator.nextIndex();
-  //    IParameter currentParameter = iterator.next();
-  //    BurpExtender.getCallbacks().printOutput(currentParameter.getName());
-  //    BurpExtender.getCallbacks().printOutput(currentParameter.getValue());
-  //    BurpExtender.getCallbacks().printOutput(Byte.toString(currentParameter.getType()));
-  //    // Each if statement checks if isRegexMatch && check regex
-  //    // || regular string compare
-  //    if (currentParameter.getType() == IParameter.PARAM_URL ||
-  //        currentParameter.getType() == IParameter.PARAM_BODY) {
-  //      if ((this.isRegexMatch && currentParameter.getName().matches(this.match))
-  //          || currentParameter.getName().equals(this.match)) {
-  //        if (requestIsMultipartForm && currentParameter.getType() == IParameter.PARAM_BODY) {
-  //          parameters.set(i, helpers.buildParameter(
-  //              this.replace,
-  //              currentParameter.getValue(),
-  //              IParameter.PARAM_MULTIPART_ATTR));
-  //          BurpExtender.getCallbacks().printOutput("SUCCESS!!!");
-  //          wasChanged = true;
-  //        } else {
-  //          parameters.set(i, helpers.buildParameter(
-  //              this.replace,
-  //              currentParameter.getValue(),
-  //              currentParameter.getType()));
-  //          BurpExtender.getCallbacks().printOutput("SUCCESS!!!");
-  //          wasChanged = true;
-  //        }
-  //      }
-  //    }
-  //    // Bail if anything was changed
-  //    if (this.which.equals("Replace First")) {
-  //      if (wasChanged) {
-  //        break;
-  //      }
-  //    }
-  //  }
-  //  if (wasChanged) {
-  //    byte[] tempRequest = Arrays.copyOf(request, request.length);
-  //    // Remove every parameter
-  //    for (IParameter param : originalParameters) {
-  //      tempRequest = helpers.removeParameter(tempRequest, param);
-  //    }
-  //    // Add them back
-  //    for (IParameter param : parameters) {
-  //      tempRequest = helpers.addParameter(tempRequest, param);
-  //    }
-  //    // Update the body and headers
-  //    IRequestInfo tempAnalyzedRequest = helpers.analyzeRequest(tempRequest);
-  //    byte[] body = Arrays
-  //        .copyOfRange(tempRequest, tempAnalyzedRequest.getBodyOffset(), tempRequest.length);
-  //    List<String> headers = tempAnalyzedRequest.getHeaders();
-  //    return helpers.buildHttpMessage(headers, body);
-  //  }
-  //  return request;
-  //}
 
   private byte[] updateRequestParamName(byte[] request) {
     if (!Utils.isRequestMultipartForm(request)) {
@@ -458,6 +394,66 @@ class Replacement {
         MatchAndReplaceType.MATCH_VALUE_REMOVE);
   }
 
+  private byte[] removeHeaderByName(byte[] request) {
+    IExtensionHelpers helpers = BurpExtender.getHelpers();
+    IRequestInfo analyzedRequest = helpers.analyzeRequest(request);
+    byte[] body = Arrays.copyOfRange(request, analyzedRequest.getBodyOffset(), request.length);
+    List<String> headers;
+    if(replaceFirst()) {
+      AtomicInteger index = new AtomicInteger(0);
+      if(isRegexMatch()) {
+        headers = analyzedRequest.getHeaders().stream()
+            .filter((x -> !(x.split(":")[0].matches(getMatch()) && index.getAndIncrement() < 1)))
+            .collect(Collectors.toCollection(ArrayList::new));
+      } else {
+        headers = analyzedRequest.getHeaders().stream()
+            .filter(x -> !(x.split(":")[0].equals(getMatch()) && index.getAndIncrement() < 1))
+            .collect(Collectors.toCollection(ArrayList::new));
+      }
+    } else {
+      if(isRegexMatch()) {
+        headers = analyzedRequest.getHeaders().stream()
+            .filter(x -> !(x.split(":")[0].matches(getMatch())))
+            .collect(Collectors.toCollection(ArrayList::new));
+      } else {
+        headers = analyzedRequest.getHeaders().stream()
+            .filter(x -> !(x.split(":")[0].equals(getMatch())))
+            .collect(Collectors.toCollection(ArrayList::new));
+      }
+    }
+    return helpers.buildHttpMessage(headers, body);
+  }
+
+  private byte[] removeHeaderByValue(byte[] request) {
+    IExtensionHelpers helpers = BurpExtender.getHelpers();
+    IRequestInfo analyzedRequest = helpers.analyzeRequest(request);
+    byte[] body = Arrays.copyOfRange(request, analyzedRequest.getBodyOffset(), request.length);
+    List<String> headers;
+    if(replaceFirst()) {
+      AtomicInteger index = new AtomicInteger(0);
+      if(isRegexMatch()) {
+        headers = analyzedRequest.getHeaders().stream()
+            .filter(x -> x.split(":")[1].matches(getMatch()) && index.getAndIncrement() < 1)
+            .collect(Collectors.toCollection(ArrayList::new));
+      } else {
+        headers = analyzedRequest.getHeaders().stream()
+            .filter(x -> x.split(":")[1].equals(getMatch()) && index.getAndIncrement() < 1)
+            .collect(Collectors.toCollection(ArrayList::new));
+      }
+    } else {
+      if(isRegexMatch()) {
+        headers = analyzedRequest.getHeaders().stream()
+            .filter(x -> x.split(":")[1].matches(getMatch()))
+            .collect(Collectors.toCollection(ArrayList::new));
+      } else {
+        headers = analyzedRequest.getHeaders().stream()
+            .filter(x -> x.split(":")[1].equals(getMatch()))
+            .collect(Collectors.toCollection(ArrayList::new));
+      }
+    }
+    return helpers.buildHttpMessage(headers, body);
+  }
+
   private byte[] updateCookieValueByName(byte[] request) {
     return updateBurpParam(request, IParameter.PARAM_COOKIE,
         MatchAndReplaceType.MATCH_NAME_REPLACE_VALUE);
@@ -477,9 +473,9 @@ class Replacement {
     return helpers.buildHttpMessage(headers, body);
   }
 
+  // TODO: Modify this to return List<Byte[]> to support "Replace Each"
   public byte[] performReplacement(IHttpRequestResponse messageInfo) {
     byte[] request = messageInfo.getRequest();
-
     if (this.isEnabled) {
       switch (this.type) {
         case ("Request Header"):
@@ -508,6 +504,10 @@ class Replacement {
           return removeCookieByName(request);
         case ("Remove Cookie By Value"):
           return removeCookieByValue(request);
+        case ("Remove Header By Name"):
+          return removeHeaderByName(request);
+        case ("Remove Header By Value"):
+          return removeHeaderByValue(request);
         case ("Match Param Name, Replace Value"):
           return updateRequestParamValueByName(request);
         case ("Match Cookie Name, Replace Value"):

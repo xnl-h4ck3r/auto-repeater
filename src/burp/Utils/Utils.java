@@ -1,7 +1,18 @@
-package burp;
+package burp.Utils;
 
+import burp.BurpExtender;
+import burp.IExtensionHelpers;
+import burp.IHttpRequestResponse;
+import burp.IHttpService;
+import burp.IParameter;
+import burp.IRequestInfo;
+import burp.Logs.LogEntry;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,6 +59,21 @@ public class Utils {
       }
     }
     return json.toString();
+  }
+
+  public static String readFile(File file) {
+    BufferedReader br;
+    StringBuilder output = new StringBuilder();
+    try {
+      br = new BufferedReader(new FileReader(file));
+      String st;
+      while ((st = br.readLine()) != null) {
+        output.append(st);
+      }
+    } catch (IOException e) {
+      return "";
+    }
+    return output.toString();
   }
 
   public static String exportLogEntriesToCsv (ArrayList<LogEntry> logEntries, boolean exportHttp) {
@@ -196,14 +222,13 @@ public class Utils {
 
   public static byte[] byteArrayRegexReplaceFirst(byte[] input, String regex, String replacement) {
     try {
-      // I need to specify ASCII here becasue it's the easiest way for me to ensure the byte[] and
+      // I need to specify ASCII here because it's the easiest way for me to ensure the byte[] and
       // resulting string are the same length.
       String inputString = new String(input, "US-ASCII");
       Pattern pattern = Pattern.compile(regex);
       Matcher matcher = pattern.matcher(inputString);
       // I'll be appending a lot of it's just easier to use a list here
       ArrayList<Byte> output = new ArrayList<>();
-
       // the index of the start of the last match
       int currentIndex = 0;
       // Check all occurrences
@@ -236,19 +261,18 @@ public class Utils {
 
   public static byte[] byteArrayRegexReplaceAll(byte[] input, String regex, String replacement) {
     try {
-      // I need to specify ASCII here becasue it's the easiest way for me to ensure the byte[] and
+      // I need to specify ASCII here because it's the easiest way for me to ensure the byte[] and
       // resulting string are the same length.
       String inputString = new String(input, "US-ASCII");
+      //String inputString = new String(input, "UTF-16");
       Pattern pattern = Pattern.compile(regex);
       Matcher matcher = pattern.matcher(inputString);
       // I'll be appending a lot of it's just easier to use a list here
       ArrayList<Byte> output = new ArrayList<>();
-
       //BurpExtender.getCallbacks().printOutput("Input Length is: ");
       //BurpExtender.getCallbacks().printOutput(Integer.toString(input.length));
       //BurpExtender.getCallbacks().printOutput("Input String Length is: ");
       //BurpExtender.getCallbacks().printOutput(Integer.toString(inputString.length()));
-
       // the index of the start of the last match
       int currentIndex = 0;
       // Check all occurrences

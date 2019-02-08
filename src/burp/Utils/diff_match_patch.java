@@ -18,7 +18,7 @@
  */
 
 // https://github.com/GerHobbelt/google-diff-match-patch
-package burp;
+package burp.Utils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -73,7 +73,7 @@ public class diff_match_patch {
    * When deleting a large block of text (over ~64 characters), how close do
    * the contents have to be to match the expected contents. (0.0 = perfection,
    * 1.0 = very loose).  Note that Match_Threshold controls how closely the
-   * end points of a delete need to match.
+   * end points of a remove need to match.
    */
   public float Patch_DeleteThreshold = 0.5f;
   /**
@@ -90,13 +90,13 @@ public class diff_match_patch {
    * Internal class for returning results from diff_linesToChars().
    * Other less paranoid languages just use a three-element array.
    */
-  protected static class LinesToCharsResult {
+  public static class LinesToCharsResult {
 
-    protected String chars1;
-    protected String chars2;
-    protected List<String> lineArray;
+    public String chars1;
+    public String chars2;
+    public List<String> lineArray;
 
-    protected LinesToCharsResult(String chars1, String chars2,
+    public LinesToCharsResult(String chars1, String chars2,
         List<String> lineArray) {
       this.chars1 = chars1;
       this.chars2 = chars2;
@@ -111,7 +111,7 @@ public class diff_match_patch {
    * The data structure representing a diff is a Linked list of Diff objects:
    * {Diff(Operation.DELETE, "Hello"), Diff(Operation.INSERT, "Goodbye"),
    * Diff(Operation.EQUAL, " world.")}
-   * which means: delete "Hello", add "Goodbye" and keep " world."
+   * which means: remove "Hello", add "Goodbye" and keep " world."
    */
   public enum Operation {
     DELETE, INSERT, EQUAL
@@ -230,7 +230,7 @@ public class diff_match_patch {
     }
 
     if (text2.length() == 0) {
-      // Just delete some text (speedup).
+      // Just remove some text (speedup).
       diffs.add(new Diff(Operation.DELETE, text1));
       return diffs;
     }
@@ -365,7 +365,7 @@ public class diff_match_patch {
    * @param deadline Time at which to bail if not yet complete.
    * @return LinkedList of Diff objects.
    */
-  protected LinkedList<Diff> diff_bisect(String text1, String text2,
+  public LinkedList<Diff> diff_bisect(String text1, String text2,
       long deadline) {
     // Cache the text lengths to prevent multiple calls.
     int text1_length = text1.length();
@@ -513,7 +513,7 @@ public class diff_match_patch {
    * @return An object containing the encoded text1, the encoded text2 and the List of unique
    * strings.  The zeroth element of the List of unique strings is intentionally blank.
    */
-  protected LinesToCharsResult diff_linesToChars(String text1, String text2) {
+  public LinesToCharsResult diff_linesToChars(String text1, String text2) {
     List<String> lineArray = new ArrayList<String>();
     Map<String, Integer> lineHash = new HashMap<String, Integer>();
     // e.g. linearray[4] == "Hello\n"
@@ -572,7 +572,7 @@ public class diff_match_patch {
    * @param diffs LinkedList of Diff objects.
    * @param lineArray List of unique strings.
    */
-  protected void diff_charsToLines(LinkedList<Diff> diffs,
+  public void diff_charsToLines(LinkedList<Diff> diffs,
       List<String> lineArray) {
     StringBuilder text;
     for (Diff diff : diffs) {
@@ -630,7 +630,7 @@ public class diff_match_patch {
    * @return The number of characters common to the end of the first string and the start of the
    * second string.
    */
-  protected int diff_commonOverlap(String text1, String text2) {
+  public int diff_commonOverlap(String text1, String text2) {
     // Cache the text lengths to prevent multiple calls.
     int text1_length = text1.length();
     int text2_length = text2.length();
@@ -680,7 +680,7 @@ public class diff_match_patch {
    * @return Five element String array, containing the prefix of text1, the suffix of text1, the
    * prefix of text2, the suffix of text2 and the common middle.  Or null if there was no match.
    */
-  protected String[] diff_halfMatch(String text1, String text2) {
+  public String[] diff_halfMatch(String text1, String text2) {
     if (Diff_Timeout <= 0) {
       // Don't risk returning a non-optimal diff if we have unlimited time.
       return null;
@@ -807,7 +807,7 @@ public class diff_match_patch {
           }
           pointer.next();
 
-          // Replace equality with a delete.
+          // Replace equality with a remove.
           pointer.set(new Diff(Operation.DELETE, lastequality));
           // Insert a corresponding an insert.
           pointer.add(new Diff(Operation.INSERT, lastequality));
@@ -1116,7 +1116,7 @@ public class diff_match_patch {
           }
           pointer.next();
 
-          // Replace equality with a delete.
+          // Replace equality with a remove.
           pointer.set(new Diff(Operation.DELETE, lastequality));
           // Insert a corresponding an insert.
           pointer.add(thisDiff = new Diff(Operation.INSERT, lastequality));
@@ -1443,7 +1443,7 @@ public class diff_match_patch {
   /**
    * Crush the diff into an encoded string which describes the operations
    * required to transform text1 into text2.
-   * E.g. =3\t-2\t+ing  -> Keep 3 chars, delete 2 chars, insert 'ing'.
+   * E.g. =3\t-2\t+ing  -> Keep 3 chars, remove 2 chars, insert 'ing'.
    * Operations are tab-separated.  Inserted text is escaped using %xx notation.
    *
    * @param diffs Array of Diff objects.
@@ -1499,7 +1499,7 @@ public class diff_match_patch {
         continue;
       }
       // Each token begins with a one character parameter which specifies the
-      // operation of this token (delete, insert, equality).
+      // operation of this token (remove, insert, equality).
       String param = token.substring(1);
       switch (token.charAt(0)) {
         case '+':
@@ -1602,7 +1602,7 @@ public class diff_match_patch {
    * @param loc The location to search around.
    * @return Best match index or -1.
    */
-  protected int match_bitap(String text, String pattern, int loc) {
+  public int match_bitap(String text, String pattern, int loc) {
     assert (Match_MaxBits == 0 || pattern.length() <= Match_MaxBits)
         : "Pattern too long for this application.";
 
@@ -1722,7 +1722,7 @@ public class diff_match_patch {
    * @param pattern The text to encode.
    * @return Hash of character locations.
    */
-  protected Map<Character, Integer> match_alphabet(String pattern) {
+  public Map<Character, Integer> match_alphabet(String pattern) {
     Map<Character, Integer> s = new HashMap<Character, Integer>();
     char[] char_pattern = pattern.toCharArray();
     for (char c : char_pattern) {
@@ -1746,7 +1746,7 @@ public class diff_match_patch {
    * @param patch The patch to grow.
    * @param text Source text.
    */
-  protected void patch_addContext(Patch patch, String text) {
+  public void patch_addContext(Patch patch, String text) {
     if (text.length() == 0) {
       return;
     }
@@ -1982,7 +1982,7 @@ public class diff_match_patch {
       int end_loc = -1;
       if (text1.length() > this.Match_MaxBits) {
         // patch_splitMax will only provide an oversized pattern in the case of
-        // a monster delete.
+        // a monster remove.
         start_loc = match_main(text,
             text1.substring(0, this.Match_MaxBits), expected_loc);
         if (start_loc != -1) {

@@ -1,5 +1,7 @@
-package burp;
+package burp.Replacements;
 
+import burp.Replacements.Replacement;
+import java.util.stream.Collectors;
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
 
@@ -34,7 +36,9 @@ public class ReplacementTableModel extends AbstractTableModel {
   }
 
   public ArrayList<Replacement> getReplacements() {
-    return replacements;
+    return replacements.stream()
+        .filter(Replacement::isEnabled)
+        .collect(Collectors.toCollection(ArrayList::new));
   }
 
   public void deleteReplacement(int replacementIndex) {

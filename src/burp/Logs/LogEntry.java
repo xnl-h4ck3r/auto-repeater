@@ -1,5 +1,11 @@
-package burp;
+package burp.Logs;
 
+import burp.BurpExtender;
+import burp.Highlighter.Highlighter;
+import burp.IHttpRequestResponsePersisted;
+import burp.IRequestInfo;
+import burp.IResponseInfo;
+import java.awt.Color;
 import java.net.URL;
 import java.util.Arrays;
 
@@ -26,11 +32,29 @@ public class LogEntry {
   private int originalRequestHashCode;
   private int modifiedRequestHashCode;
 
+  private int toolFlag;
+
   private long requestSentTime;
+
+  private Color backgroundColor;
+  private Color selectedBackgroundColor;
 
   public long getRequestResponseId() {
     return requestResponseId;
   }
+
+  public Color getSelectedBackgroundColor() {
+    return this.selectedBackgroundColor;
+  }
+
+  public void setBackgroundColor(Color backgroundColor, Color selectedBackgroundColor) {
+    this.backgroundColor = backgroundColor;
+    this.selectedBackgroundColor = selectedBackgroundColor;
+  }
+
+  public Color getBackgroundColor() { return this.backgroundColor; }
+
+  public Color getFontColor() { return this.backgroundColor; }
 
   public void setRequestResponseId(long requestResponseId) {
     this.requestResponseId = requestResponseId;
@@ -168,19 +192,24 @@ public class LogEntry {
   // Orig. Length
   // Mod. Length
 
-  LogEntry(long requestResponseId,
+  public LogEntry(long requestResponseId,
+      int toolFlag,
       IHttpRequestResponsePersisted originalRequestResponse,
       IHttpRequestResponsePersisted modifiedRequestResponse) {
 
     IRequestInfo originalAnalyzedRequest = BurpExtender.getHelpers()
         .analyzeRequest(originalRequestResponse);
+
     IRequestInfo modifiedAnalyzedRequest = BurpExtender.getHelpers()
         .analyzeRequest(modifiedRequestResponse);
 
     IResponseInfo originalAnalyzedResponse = BurpExtender.getHelpers()
         .analyzeResponse(originalRequestResponse.getResponse());
+    this.originalResponseStatus = originalAnalyzedResponse.getStatusCode();
+
     IResponseInfo modifiedAnalyzedResponse = BurpExtender.getHelpers()
-        .analyzeResponse(modifiedRequestResponse.getResponse());
+            .analyzeResponse(modifiedRequestResponse.getResponse());
+    this.modifiedResponseStatus = modifiedAnalyzedResponse.getStatusCode();
 
     // Request ID
     this.requestResponseId = requestResponseId;
@@ -189,14 +218,12 @@ public class LogEntry {
     this.originalRequestResponse = originalRequestResponse;
     this.originalURL = originalAnalyzedRequest.getUrl();
     this.originalMethod = originalAnalyzedRequest.getMethod();
-    this.originalResponseStatus = originalAnalyzedResponse.getStatusCode();
     this.originalLength = originalRequestResponse.getResponse().length;
 
     // Modified Request Info
     this.modifiedRequestResponse = modifiedRequestResponse;
     this.modifiedURL = modifiedAnalyzedRequest.getUrl();
     this.modifiedMethod = modifiedAnalyzedRequest.getMethod();
-    this.modifiedResponseStatus = modifiedAnalyzedResponse.getStatusCode();
     this.modifiedLength = modifiedRequestResponse.getResponse().length;
 
     // Comparisons
@@ -206,7 +233,20 @@ public class LogEntry {
     this.originalRequestHashCode = Arrays.hashCode(originalRequestResponse.getRequest());
     this.modifiedRequestHashCode = Arrays.hashCode(modifiedRequestResponse.getRequest());
 
+    this.toolFlag = toolFlag;
+
     this.requestSentTime = System.currentTimeMillis();
+
+    backgroundColor = Highlighter.COLORS[0];
+    selectedBackgroundColor = Highlighter.SELECTED_COLORS[0];
+  }
+
+  public int getToolFlag() {
+    return toolFlag;
+  }
+
+  public void setToolFlag(int toolFlag) {
+    this.toolFlag = toolFlag;
   }
 }
 

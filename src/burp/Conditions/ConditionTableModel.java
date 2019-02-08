@@ -1,11 +1,12 @@
-package burp;
+package burp.Conditions;
 
+import burp.IHttpRequestResponse;
 import javax.swing.table.AbstractTableModel;
 import java.util.ArrayList;
 
 public class ConditionTableModel extends AbstractTableModel {
 
-  private String[] columnNames = {
+  private final static String[] columnNames = {
       "Enabled",
       "Boolean Operator",
       "Match Type",
@@ -20,29 +21,53 @@ public class ConditionTableModel extends AbstractTableModel {
     conditions = new ArrayList<>();
   }
 
-  public void addCondition(Condition newCondition) {
-    conditions.add(newCondition);
+  public void add(Condition condition) { conditions.add(condition); }
+
+  public void update(int index, Condition condition) {
+    if (index == 0) {
+      condition.setBooleanOperator("");
+    }
+    conditions.set(index, condition);
   }
 
-  public void updateCondition(int replacementIndex, Condition newCondition) {
-    if (replacementIndex == 0) {
-      newCondition.setBooleanOperator("");
+  public boolean check(int toolFlag, IHttpRequestResponse messageInfo) {
+    boolean meetsConditions = false;
+    if (getConditions().size() == 0) {
+      meetsConditions = false;
+    } else {
+      if (getConditions()
+          .stream()
+          .filter(Condition::isEnabled)
+          .filter(c -> c.getBooleanOperator().equals("Or"))
+          .anyMatch(c -> c.checkCondition(toolFlag, messageInfo))) {
+        meetsConditions = true;
+      }
+      if (getConditions()
+          .stream()
+          .filter(Condition::isEnabled)
+          .filter(
+              c -> c.getBooleanOperator().equals("And") || c.getBooleanOperator().equals(""))
+          .allMatch(c -> c.checkCondition(toolFlag, messageInfo))) {
+        meetsConditions = true;
+      }
     }
-    conditions.set(replacementIndex, newCondition);
+    return meetsConditions;
   }
 
   public ArrayList<Condition> getConditions() {
     return conditions;
   }
 
-  public Condition getCondition(int conditionIndex) {
+  public Condition get(int conditionIndex) {
     return conditions.get(conditionIndex);
   }
 
-  public void deleteCondition(int replacementIndex) {
-    if (replacementIndex != 0) {
-      conditions.remove(replacementIndex);
-    }
+  public void remove(int index) {
+    if (index != 0) { conditions.remove(index); }
+  }
+
+  public void clear() {
+    conditions.clear();
   }
 
   @Override
@@ -72,8 +97,10 @@ public class ConditionTableModel extends AbstractTableModel {
         return tempCondition.getMatchType();
       case 3:
         return tempCondition.getMatchRelationship();
-      default:
+      case 4:
         return tempCondition.getMatchCondition();
+      default:
+        throw new IllegalStateException("getValueAt not defined for "+Integer.toString(col));
     }
   }
 
