@@ -93,9 +93,27 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener, IContex
       callbacks.addSuiteTab(BurpExtender.this);
       // set parent component
       parentTabbedPane = (JTabbedPane) getUiComponent().getParent();
-      autoRepeaterMenu = new AutoRepeaterMenu(parentTabbedPane.getRootPane());
-      SwingUtilities.invokeLater(autoRepeaterMenu);
+
+      if (parentTabbedPane != null) {
+        autoRepeaterMenu = new AutoRepeaterMenu(parentTabbedPane.getRootPane());
+        SwingUtilities.invokeLater(autoRepeaterMenu);
+      } else {
+        getUiComponent().addHierarchyListener(new MenuCreatingHierarchyListener());
+      }
     });
+  }
+
+  private class MenuCreatingHierarchyListener implements HierarchyListener {
+    @Override
+    public void hierarchyChanged(HierarchyEvent e) {
+      if (getUiComponent().getParent() != null) {
+        // set parent component
+        parentTabbedPane = (JTabbedPane) getUiComponent().getParent();
+        autoRepeaterMenu = new AutoRepeaterMenu(parentTabbedPane.getRootPane());
+        autoRepeaterMenu.run();
+        getUiComponent().removeHierarchyListener(this);
+      }
+    }
   }
 
   public static AutoRepeaterMenu getAutoRepeaterMenu() {
