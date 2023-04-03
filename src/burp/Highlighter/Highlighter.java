@@ -5,7 +5,7 @@ import java.awt.Color;
 
 public class Highlighter extends Filter {
   public final static Color[] COLORS = {
-      new Color(0xFFFFFF),
+      new Color(0x323334),
       new Color(0xFB6063),
       new Color(0xFFC562),
       new Color(0xFDFF5F),
@@ -13,12 +13,12 @@ public class Highlighter extends Filter {
       new Color(0x64FFFF),
       new Color(0x6262FF),
       new Color(0xFFC6CC),
-      new Color(0xFE63FD) ,
+      new Color(0xFE63FD),
       new Color(0xB3B5B2),
   };
 
   public final static Color[] SELECTED_COLORS = {
-      new Color(0xFFC498),
+      new Color(0x41506D),
       new Color(0xDF4444),
       new Color(0xDFa844),
       new Color(0xDFDF44),
@@ -31,7 +31,7 @@ public class Highlighter extends Filter {
   };
 
   public final static String[] COLOR_NAMES = {
-      "WHITE",
+      "BLACK",
       "RED",
       "ORANGE",
       "YELLOW",
@@ -43,9 +43,8 @@ public class Highlighter extends Filter {
       "GRAY"
   };
 
-
   public static Color getColorFromColorName(String colorName) {
-    for(int i = 0; i < Highlighter.COLOR_NAMES.length; i++) {
+    for (int i = 0; i < Highlighter.COLOR_NAMES.length; i++) {
       if (Highlighter.COLOR_NAMES[i].equals(colorName)) {
         return Highlighter.COLORS[i];
       }
@@ -54,7 +53,7 @@ public class Highlighter extends Filter {
   }
 
   public static Color getSelectedColorFromColorName(String colorName) {
-    for(int i = 0; i < Highlighter.COLOR_NAMES.length; i++) {
+    for (int i = 0; i < Highlighter.COLOR_NAMES.length; i++) {
       if (Highlighter.COLOR_NAMES[i].equals(colorName)) {
         return Highlighter.SELECTED_COLORS[i];
       }

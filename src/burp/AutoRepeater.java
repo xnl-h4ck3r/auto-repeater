@@ -41,13 +41,13 @@ public class AutoRepeater implements IMessageEditorController {
   public static final int TEXT_HEIGHT = new JTextField().getPreferredSize().height;
   public static final int BUTTON_HEIGHT = new JButton().getPreferredSize().height;
 
-  public static final Dimension dialogDimension = new Dimension(450, 140);
+  public static final Dimension dialogDimension = new Dimension(450, TEXT_HEIGHT * 9);
   public static final Dimension comboBoxDimension = new Dimension(250, TEXT_HEIGHT);
   public static final Dimension textFieldDimension = new Dimension(250, TEXT_HEIGHT);
-  public static final Dimension buttonDimension = new Dimension(75, TEXT_HEIGHT);
-  public static final Dimension buttonPanelDimension = new Dimension(75, TEXT_HEIGHT*7);
-  public static final Dimension tableDimension = new Dimension(200, 300);
-  public static final Dimension configurationPaneDimension = new Dimension(470, 200);
+  public static final Dimension buttonDimension = new Dimension(80, TEXT_HEIGHT);
+  public static final Dimension buttonPanelDimension = new Dimension(75, TEXT_HEIGHT * 9);
+  public static final Dimension tableDimension = new Dimension(200, TEXT_HEIGHT * 9);
+  public static final Dimension configurationPaneDimension = new Dimension(470, TEXT_HEIGHT * 9);
 
   private IBurpExtenderCallbacks callbacks;
   private IExtensionHelpers helpers;
@@ -213,10 +213,10 @@ public class AutoRepeater implements IMessageEditorController {
       }
     }
     // If something was empty, put in the default values
-    if(conditionsTableModel.getConditions().size() == 0) {
+    if (conditionsTableModel.getConditions().size() == 0) {
       setDefaultConditions();
     }
-    if(filterTableModel.getFilters().size() == 0) {
+    if (filterTableModel.getFilters().size() == 0) {
       setDefaultFilters();
     }
   }
@@ -225,33 +225,29 @@ public class AutoRepeater implements IMessageEditorController {
     conditionsTableModel.add(new Condition(
         "",
         "Sent From Tool",
-        "Burp",
-        ""
-    ));
+        "Proxy",
+        ""));
 
     conditionsTableModel.add(new Condition(
         "Or",
         "Request",
         "Contains Parameters",
         "",
-        false
-    ));
+        false));
 
     conditionsTableModel.add(new Condition(
         "Or",
         "HTTP Method",
         "Does Not Match",
         "(GET|POST)",
-        false
-    ));
+        false));
 
     conditionsTableModel.add(new Condition(
         "And",
         "URL",
         "Is In Scope",
         "",
-        false
-    ));
+        true));
   }
 
   public void setDefaultFilters() {
@@ -260,8 +256,7 @@ public class AutoRepeater implements IMessageEditorController {
         "Original",
         "Sent From Tool",
         "Burp",
-        ""
-    ));
+        ""));
   }
 
   private void setDefaultState() {
@@ -380,12 +375,11 @@ public class AutoRepeater implements IMessageEditorController {
       @Override
       public Component getTableCellRendererComponent(
           JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-        Component c =
-            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+        Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
         c.setBackground(
             logManager.getLogTableModel().getLogEntry(
                 logTable.convertRowIndexToModel(row)).getBackgroundColor());
-        if(isSelected) {
+        if (isSelected) {
           c.setBackground(
               logManager.getLogTableModel().getLogEntry(
                   logTable.convertRowIndexToModel(row)).getSelectedBackgroundColor());
@@ -587,7 +581,7 @@ public class AutoRepeater implements IMessageEditorController {
     diffSplitPane.setResizeWeight(0.50);
     tabs.addTab("Diff", diffSplitPane);
 
-    //Add line diff tab
+    // Add line diff tab
     lineDiffSplitPane.setLeftComponent(requestLineDiffPanel);
     lineDiffSplitPane.setRightComponent(responseLineDiffPanel);
     lineDiffSplitPane.setResizeWeight(0.50);
@@ -613,8 +607,7 @@ public class AutoRepeater implements IMessageEditorController {
               originalRequestResponseSplitPane.getDividerLocation());
           lineDiffSplitPane.setDividerLocation(
               originalRequestResponseSplitPane.getDividerLocation());
-        }
-    );
+        });
     modifiedRequestResponseSplitPane.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY,
         pce -> {
           originalRequestResponseSplitPane.setDividerLocation(
@@ -623,8 +616,7 @@ public class AutoRepeater implements IMessageEditorController {
               modifiedRequestResponseSplitPane.getDividerLocation());
           lineDiffSplitPane.setDividerLocation(
               modifiedRequestResponseSplitPane.getDividerLocation());
-        }
-    );
+        });
     diffSplitPane.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY,
         pce -> {
           originalRequestResponseSplitPane.setDividerLocation(
@@ -633,8 +625,7 @@ public class AutoRepeater implements IMessageEditorController {
               diffSplitPane.getDividerLocation());
           lineDiffSplitPane.setDividerLocation(
               diffSplitPane.getDividerLocation());
-        }
-    );
+        });
     lineDiffSplitPane.addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY,
         pce -> {
           originalRequestResponseSplitPane.setDividerLocation(
@@ -643,8 +634,7 @@ public class AutoRepeater implements IMessageEditorController {
               lineDiffSplitPane.getDividerLocation());
           diffSplitPane.setDividerLocation(
               lineDiffSplitPane.getDividerLocation());
-        }
-    );
+        });
 
     // I don't know what this actually does but I think it's correct
     callbacks.customizeUiComponent(mainSplitPane);
@@ -655,25 +645,25 @@ public class AutoRepeater implements IMessageEditorController {
 
   public void modifyAndSendRequestAndLog(
       int toolFlag,
-      IHttpRequestResponse messageInfo ) {
+      IHttpRequestResponse messageInfo) {
     if (activatedButton.isSelected()
         && toolFlag != BurpExtender.getCallbacks().TOOL_EXTENDER) {
       boolean meetsConditions = conditionsTableModel.check(toolFlag, messageInfo);
       if (meetsConditions) {
         // Create a set to store each new unique request in
         HashSet<IHttpRequestResponse> requestSet = new HashSet<>();
-        IHttpRequestResponse baseReplacedRequestResponse = Utils
-            .cloneIHttpRequestResponse(messageInfo);
+        IHttpRequestResponse baseReplacedRequestResponse = Utils.cloneIHttpRequestResponse(messageInfo);
         // Perform all the base replacements on the captured request
         for (Replacement globalReplacement : baseReplacementsTableModel.getReplacements()) {
           baseReplacedRequestResponse.setRequest(
               globalReplacement.performReplacement(baseReplacedRequestResponse));
         }
-        //Add the base replaced request to the request set
-        if(replacementsTableModel.getReplacements().size() == 0) {
+        // Add the base replaced request to the request set
+        if (replacementsTableModel.getReplacements().isEmpty()) {
           requestSet.add(baseReplacedRequestResponse);
         }
-        // Perform all the separate replacements on the request+base replacements and add them to the set
+        // Perform all the separate replacements on the request+base replacements and
+        // add them to the set
         for (Replacement replacement : replacementsTableModel.getReplacements()) {
           IHttpRequestResponse newHttpRequest = Utils
               .cloneIHttpRequestResponse(baseReplacedRequestResponse);
@@ -681,38 +671,38 @@ public class AutoRepeater implements IMessageEditorController {
           requestSet.add(newHttpRequest);
         }
         // Perform every unique request and log
+        // int count = 0;
         for (IHttpRequestResponse request : requestSet) {
           if (!Arrays.equals(request.getRequest(), messageInfo.getRequest())) {
-            IHttpRequestResponse modifiedRequestResponse =
-                callbacks.makeHttpRequest(messageInfo.getHttpService(), request.getRequest());
-            if(BurpExtender.getAutoRepeaterMenu().sendRequestsToPassiveScanner) {
+            // count += 1;
+            // BurpExtender.getCallbacks().printOutput("Sending Request " + count + " of " +
+            // requestSet.size());
+            IHttpRequestResponse modifiedRequestResponse = callbacks.makeHttpRequest(messageInfo.getHttpService(),
+                request.getRequest());
+            if (BurpExtender.getAutoRepeaterMenu().sendRequestsToPassiveScanner) {
               BurpExtender.getCallbacks().doPassiveScan(
                   modifiedRequestResponse.getHttpService().getHost(),
                   modifiedRequestResponse.getHttpService().getPort(),
                   modifiedRequestResponse.getHttpService().getProtocol().equals("https"),
                   modifiedRequestResponse.getRequest(),
-                  modifiedRequestResponse.getResponse()
-              );
+                  modifiedRequestResponse.getResponse());
             }
-            if(BurpExtender.getAutoRepeaterMenu().addRequestsToSiteMap) {
+            if (BurpExtender.getAutoRepeaterMenu().addRequestsToSiteMap) {
               BurpExtender.getCallbacks().addToSiteMap(modifiedRequestResponse);
             }
-
             if (modifiedRequestResponse.getResponse() == null) {
               modifiedRequestResponse.setResponse(new byte[0]);
             }
-
-            int row = logManager.getRowCount();
             LogEntry newLogEntry = new LogEntry(
                 logManager.getLogTableModel().getLogCount() + 1,
                 toolFlag,
                 callbacks.saveBuffersToTempFiles(messageInfo),
                 callbacks.saveBuffersToTempFiles(modifiedRequestResponse));
-            // Highlight the rows
             highlighters.highlight(newLogEntry);
+            // int row = logManager.getRowCount();
             logManager.addEntry(newLogEntry, filters);
-            logManager.fireTableRowsUpdated(row, row);
-            BurpExtender.getCallbacks().printOutput(Integer.toString(logManager.getRowCount()));
+            // Highlight the rows
+            logManager.getLogTableModel().fireTableDataChanged();
           }
         }
       }
@@ -872,7 +862,7 @@ public class AutoRepeater implements IMessageEditorController {
       // show the log entry for the selected row
       LogEntry logEntry = logManager.getLogEntry(convertRowIndexToModel(row));
 
-      //final LogTable _this = this;
+      // final LogTable _this = this;
       this.addMouseListener(new MouseAdapter() {
         @Override
         public void mouseClicked(MouseEvent e) {
@@ -904,7 +894,8 @@ public class AutoRepeater implements IMessageEditorController {
         }
       });
 
-      // There's a delay while changing selections because setting the diff viewer is slow.
+      // There's a delay while changing selections because setting the diff viewer is
+      // slow.
       new Thread(() -> {
         originalRequest = logEntry.getOriginalRequestResponse().getRequest();
         originalResponse = logEntry.getOriginalRequestResponse().getResponse();
@@ -913,27 +904,49 @@ public class AutoRepeater implements IMessageEditorController {
         currentOriginalRequestResponse = logEntry.getOriginalRequestResponse();
         currentModifiedRequestResponse = logEntry.getModifiedRequestResponse();
 
-        new Thread(() -> {
+        SwingUtilities.invokeLater(() -> {
           requestDiff = HttpComparer
               .diffText(new String(originalRequest), new String(modifiedRequest));
           updateRequestViewers();
-        }).start();
-        new Thread(() -> {
+        });
+        SwingUtilities.invokeLater(() -> {
           responseDiff = HttpComparer
               .diffText(new String(originalResponse), new String(modifiedResponse));
           updateRequestViewers();
-        }).start();
-        new Thread(() -> {
+        });
+        SwingUtilities.invokeLater(() -> {
           requestLineDiff = HttpComparer
               .diffLines(new String(originalRequest), new String(modifiedRequest));
           updateRequestViewers();
-        }).start();
-        new Thread(() -> {
+
+        });
+        SwingUtilities.invokeLater(() -> {
           responseLineDiff = HttpComparer
               .diffLines(new String(originalResponse), new String(modifiedResponse));
           updateRequestViewers();
-        }).start();
-        updateRequestViewers();
+        });
+
+        // new Thread(() -> {
+        // requestDiff = HttpComparer
+        // .diffText(new String(originalRequest), new String(modifiedRequest));
+        // updateRequestViewers();
+        // }).start();
+        // new Thread(() -> {
+        // responseDiff = HttpComparer
+        // .diffText(new String(originalResponse), new String(modifiedResponse));
+        // updateRequestViewers();
+        // }).start();
+        // new Thread(() -> {
+        // requestLineDiff = HttpComparer
+        // .diffLines(new String(originalRequest), new String(modifiedRequest));
+        // updateRequestViewers();
+        // }).start();
+        // new Thread(() -> {
+        // responseLineDiff = HttpComparer
+        // .diffLines(new String(originalResponse), new String(modifiedResponse));
+        // updateRequestViewers();
+        // }).start();
+        // updateRequestViewers();
         // Hack to speed up the ui
       }).start();
     }

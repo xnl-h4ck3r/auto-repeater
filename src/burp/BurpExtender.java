@@ -31,7 +31,7 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener, IContex
   private static JPanel newTabButton;
   private static AutoRepeaterMenu autoRepeaterMenu;
   private ExecutorService executor;
-  //private static ResponseStore responseStore;
+  // private static ResponseStore responseStore;
 
   // Global state variables
   private static int tabCounter = 0;
@@ -46,7 +46,7 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener, IContex
     BurpExtender.helpers = callbacks.getHelpers();
     // Gson for serialization
     BurpExtender.gson = new Gson();
-    //BurpExtender.gson = new GsonBuilder().setPrettyPrinting().create();
+    // BurpExtender.gson = new GsonBuilder().setPrettyPrinting().create();
     autoRepeaters = new ArrayList<>();
     executor = Executors.newFixedThreadPool(25);
     // create our UI
@@ -85,10 +85,9 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener, IContex
       // Add To Right Click Menu
       callbacks.registerContextMenuFactory(BurpExtender.this);
       // Add response store
-      //Save State
+      // Save State
       callbacks.registerExtensionStateListener(
-          () -> callbacks.saveExtensionSetting(getTabCaption(), exportSave())
-      );
+          () -> callbacks.saveExtensionSetting(getTabCaption(), exportSave()));
       // Add A Custom Tab To Burp
       callbacks.addSuiteTab(BurpExtender.this);
       // set parent component
@@ -128,8 +127,7 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener, IContex
     JsonArray BurpExtenderJson = new JsonArray();
     // Don't count the "..." tab
     for (int i = 0; i < mainTabbedPane.getTabCount() - 1; i++) {
-      AutoRepeaterTabHandle autoRepeaterTabHandle
-          = (AutoRepeaterTabHandle) mainTabbedPane.getTabComponentAt(i);
+      AutoRepeaterTabHandle autoRepeaterTabHandle = (AutoRepeaterTabHandle) mainTabbedPane.getTabComponentAt(i);
       AutoRepeater ar = autoRepeaterTabHandle.autoRepeater;
       JsonObject AutoRepeaterJson = ar.toJson();
       AutoRepeaterJson.addProperty("tabName", autoRepeaterTabHandle.tabName.getText());
@@ -146,8 +144,7 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener, IContex
     JsonArray BurpExtenderJson = new JsonArray();
     // Don't count the "..." tab
     for (int i = 0; i < mainTabbedPane.getTabCount() - 1; i++) {
-      AutoRepeaterTabHandle autoRepeaterTabHandle
-          = (AutoRepeaterTabHandle) mainTabbedPane.getTabComponentAt(i);
+      AutoRepeaterTabHandle autoRepeaterTabHandle = (AutoRepeaterTabHandle) mainTabbedPane.getTabComponentAt(i);
       AutoRepeater tempAR = autoRepeaterTabHandle.autoRepeater;
       if (ar.equals(tempAR)) {
         JsonObject AutoRepeaterJson = tempAR.toJson();
@@ -250,8 +247,7 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener, IContex
         executor.submit(
             () -> autoRepeater.modifyAndSendRequestAndLog(
                 toolFlag,
-                messageInfo)
-        );
+                messageInfo));
       }
     }
   }
@@ -331,8 +327,8 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener, IContex
             mainTabbedPane.setSelectedComponent(autoRepeater.getUI());
             for (int i = 0; i < mainTabbedPane.getTabCount() - 2; i++) {
               if (!mainTabbedPane.getComponentAt(i).equals(autoRepeater.getUI())) {
-                AutoRepeaterTabHandle autoRepeaterTabHandle =
-                    (AutoRepeaterTabHandle) mainTabbedPane.getTabComponentAt(i);
+                AutoRepeaterTabHandle autoRepeaterTabHandle = (AutoRepeaterTabHandle) mainTabbedPane
+                    .getTabComponentAt(i);
                 autoRepeaterTabHandle.tabName.setEditable(false);
               }
             }
@@ -385,7 +381,8 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener, IContex
   }
 
   public static AutoRepeater getSelectedAutoRepeater() {
-    AutoRepeaterTabHandle autoRepeaterTabHandle = (AutoRepeaterTabHandle) mainTabbedPane.getTabComponentAt(mainTabbedPane.getSelectedIndex());
+    AutoRepeaterTabHandle autoRepeaterTabHandle = (AutoRepeaterTabHandle) mainTabbedPane
+        .getTabComponentAt(mainTabbedPane.getSelectedIndex());
     return autoRepeaterTabHandle.autoRepeater;
   }
 
@@ -426,8 +423,8 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener, IContex
           executor.submit(() -> {
             for (AutoRepeater autoRepeater : autoRepeaters) {
               autoRepeater.modifyAndSendRequestAndLog(
-                toolFlag,
-                tempRequestResponse);
+                  toolFlag,
+                  tempRequestResponse);
             }
           });
         }

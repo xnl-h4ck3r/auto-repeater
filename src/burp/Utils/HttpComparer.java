@@ -27,7 +27,7 @@ public class HttpComparer {
       LinkedList<diff_match_patch.Diff> diff = differ
           .diff_main(linesTochars.chars1, linesTochars.chars2, false);
       differ.diff_charsToLines(diff, linesTochars.lineArray);
-      //differ.diff_cleanupSemantic(diff);
+      // differ.diff_cleanupSemantic(diff);
       return diffToHtml(diff);
     }
   }
@@ -42,10 +42,14 @@ public class HttpComparer {
           .replace("\n", "<br>");
       switch (aDiff.operation) {
         case INSERT:
-          html.append("<span style=\"background:#e6ffe6;\">").append(text).append("</span>");
+          // html.append("<span
+          // style=\"background:#e6ffe6;\">").append(text).append("</span>");
+          html.append("<span style=\"background:#257a25;\">").append(text).append("</span>");
           break;
         case DELETE:
-          html.append("<span style=\"background:#ffe6e6;\">").append(text).append("</span>");
+          // html.append("<span
+          // style=\"background:#ffe6e6;\">").append(text).append("</span>");
+          html.append("<span style=\"background:#8c2626;\">").append(text).append("</span>");
           break;
         case EQUAL:
           html.append("<span>").append(text).append("</span>");
