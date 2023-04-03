@@ -156,6 +156,7 @@ public class BurpExtender implements IBurpExtender, ITab, IHttpListener, IContex
   }
 
   public static void initializeFromSave(String configuration, boolean replaceTabs) {
+    getCallbacks().printOutput("Auto Repeater - modified by @xnl_h4ck3r");
     getCallbacks().printOutput("Loading Stored AutoRepeater Configuration");
     String configurationJson;
     // Check if the configuration is B64 encoded for legacy.
