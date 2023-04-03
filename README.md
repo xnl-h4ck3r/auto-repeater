@@ -1,5 +1,3 @@
-# AutoRepeater: Automated HTTP Request Repeating With Burp Suite
-
 <center><h1>Auto Repeater<p>Burp Extension</h1></center>
 
 ## About
